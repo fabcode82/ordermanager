@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  djbackend:
+    container_name: djbackend
+    build:
+      context: BE/
+      dockerfile: Dockerfile
+    volumes:
+      - ./BE:/app
+    ports:
+      - 8000:8000
+
+
+
+
+
+  frontend:
+    build:
+      context: ./FE                 # Build from FE/Dockerfile
+    container_name: vue_app
+    ports:
+      - "8080:80"                  # Map container port 80 (Nginx) to host port 8080
+    depends_on:
+      - djbackend                    
+    # IMPORTANT: The Vue.js code must call the API using 'http://djbackend:8000/api/'
+
+
+
+ 
+
+
