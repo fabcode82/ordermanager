@@ -10,9 +10,9 @@ To prepare the env from the root folder in the terminal digit th docker compose 
 docker compose up --build
 ```
 
-FOR FRONTENDAPP Oopen browser on address http://localhost:8080/
-FOR BACKEND SWAGGER open browser on address http://localhost:8080/docs
-FOR  DJANGO ADMIN open browser on address http://localhost:8080/admin (user: root, pw:root)
+- FOR FRONTENDAPP Oopen browser on address http://localhost:8080/ ,
+- FOR BACKEND SWAGGER open browser on address http://localhost:8080/docs , 
+- FOR  DJANGO ADMIN open browser on address http://localhost:8080/admin (user: root, pw:root)
 
 
 
