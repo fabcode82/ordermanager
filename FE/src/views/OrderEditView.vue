@@ -13,7 +13,7 @@
         <div class="button-group">
             <a href="/" class="secondary-button">&larr; Torna alla lista ordini</a>
             <button  @click="UpdateOrder" id="toggleEditButton" class="primary-button edit">Modifica Dati</button>
-            <button  @click="deleteOrder" id="deleteButton" class="primary-button delete" >Elimina Ordine</button>
+            <button  @click="shoeModal" id="deleteButton" class="primary-button delete" >Elimina Ordine</button>
         </div>
 
         <!-- MESSAGGI DI SUCCESSO/ERRORE -->
@@ -93,6 +93,12 @@
         <!-- Aggiungi Nuovo Prodotto -->
          <div style="color:red;">{{alreadypresentErrorMsg}}</div>
          <NewItem  @add-item="addNewItem"/>
+
+        <DeletionModalConfirmVue
+                :show="showModal"
+                @cancel ="cancel"
+                @confirm-delete="confirmDeletion"
+        />
     </div>
 </div>
 
@@ -108,12 +114,17 @@
 import { axios } from "@/common/api.service.js";
 import {API_URL} from "@/common/endpoints.js";
 import NewItem from "@/components/NewItem.vue";
+import DeletionModalConfirmVue from '../components/DeletionModalConfirm.vue';
+
 
 
 export default {
   name: "OrderEditView",
   components: {
     NewItem,
+    DeletionModalConfirmVue
+    
+
   },
   props: {
     id: {
@@ -130,9 +141,26 @@ export default {
       alreadypresentErrorMsg: "",
       updated: false,
       loadingOrder: false,
+      showModal: false,
     };
   },
   methods: {
+
+    shoeModal(){
+        this.showModal = true;
+    },
+
+    hideModal(){
+        this.showModal = false;
+    },
+
+    cancel(){
+        this.hideModal();
+    },
+    confirmDeletion(){
+        this.hideModal();
+        this.deleteOrder();
+    },
 
     deleteItem(id){
         console.log("Deleting item...");
@@ -140,6 +168,7 @@ export default {
         this.order.items = this.order.items.filter(item => item.product_id !== id);
         console.log(this.order.items);
     },
+
 
     addNewItem(new_item){
         this.alreadypresentErrorMsg = "";
@@ -222,6 +251,7 @@ export default {
       } catch (error) {
         this.errorMessage = "ERROR: " + error.response.statusText;
         console.log(error.response);
+
 
 
       }
