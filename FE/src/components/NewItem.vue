@@ -1,98 +1,62 @@
 <template>
     <div>
 
-        <!-- <div>Order ID: {{id}}</div> -->
+       
 <div id="app" class="app-container">
     
     <div class="max-w-6xl">
-        <h1 class="page-title">
-            Dettaglio Ordine:  ID: {{order.id}} <span id="orderNameDisplay"></span>
-        </h1>
+
         
-        <!-- PULSANTI DI AZIONE -->
-        <div class="button-group">
-            <a href="/" class="secondary-button">&larr; Torna alla lista ordini</a>
-            <button  @click="UpdateOrder" id="toggleEditButton" class="primary-button edit">Modifica Dati</button>
-            <button  @click="deleteOrder" id="deleteButton" class="primary-button delete" >Elimina Ordine</button>
-        </div>
-
-        <!-- MESSAGGI DI SUCCESSO/ERRORE -->
-        <br>
-        <div v-if="updated">
-            <h4 style="color: #00a135;">(Ordine correttamente aggiornato)</h4>
-        </div>
-        <div v-if="errorMessage.length" >
-            <h4 style="color: #FF0000;">{{errorMessage}}</h4>
-        </div>
-        <div v-if="loadingOrder">
-            <h4>Caricamento ordine in corso...</h4>
-        </div>
+        <!-- CARD:-->
+        <div class="card">
+            <h2 class="section-title">Aggiungi articoli all'ordine</h2>
 
 
-        <!-- CARD: Dettagli Ordine -->
-        <div class="card" style="margin-top: 1.5rem;">
-            <h2 class="section-title">Informazioni Ordine</h2>
+                <div class="button-group">
+
+                    <button  @click="addItem" id="applaitemButton" class="primary-button edit">Aggiungi articolo</button>
+
+                </div>
+
+                <br>
             
             <form id="orderDetailForm">
                 <div class="detail-grid">
-                    <!-- Nome Ordine -->
-                    <div>
-                        <strong for="inputName">Nome Ordine</strong>
-                    <input v-model="order.name" type="text" id="inputName" class="form-input"  required>
+                    <!-- New Prodotto -->
+                    <div >
+                        <strong for="inputName">Nome Prodotto</strong>
+
+
+                        <select class="form-input" v-model="selectedProduct">
+                            <option disabled value="">Seleziona un'opzione</option>
+                            <option 
+                                v-for="product in products" 
+                                :key="product.id" 
+                                :value="product"
+                            >
+                                {{ product.name }} 
+                            </option> 
+                        </select>
                     </div>
 
-                    <!-- Data dell'Ordine -->
+                    <!--Quantita -->
                     <div>
-                        <strong for="inputDate">Data dell'Ordine</strong>
-                        <input v-model="order.date" type="date" id="inputDate" class="form-input"  required>
+                        <strong for="inputDate">Quantità</strong>
+                        <input v-model="qty" type="number" id="inputqty" class="form-input" value=1 required>
                     </div>
-                    
-                    <!-- Descrizione  -->
-                    <div style="grid-column: 1 / -1;">
-                        <strong for="inputDescription">Descrizione</strong>
-                        <textarea v-model="order.description"  id="inputDescription" class="form-textarea"  required></textarea>
-                    </div>
-
 
                 </div>
             </form>
-        </div>
 
-        <!-- Prodotti Legati all'ordine -->
-        <div class="card">
-            <h2 class="section-title">Articoli collegati</h2>
-            
-            <div class="table-container">
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Prodotto</th>
-                            <th >Prezzo Unitario (€)</th>
-                            <th >Quantità</th>
-                            <th>Elimina</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itemsTableBody">
-                        <tr v-for="(item, index) in order.items" :key="index">
-                            
-                            <td>{{item.product_name}}</td>
-                            <td >{{item.product_price}}</td>
-                            <td >
-                                <input v-model="item.quantity" type="number" id="inputName" class="form-input"  required>
-                            </td>
-                            <td> 
-                                <button @click="deleteItem(item.product_id)" id="ProductdeleteButton" class="primary-button delete" >Elimina</button>
-                            </td>
-                        </tr>
-                    </tbody>
-
-                </table>
+                    <!-- MESSAGGI DI SUCCESSO/ERRORE -->
+            <br>
+            <div v-if="errorMessage.length" >
+                <h4 style="color: #FF0000;">{{errorMessage}}</h4>
             </div>
+
+      
         </div>
-        <hr>
-        <!-- Aggiungi Nuovo Prodotto -->
-         <div style="color:red;">{{alreadypresentErrorMsg}}</div>
-         <NewItem  @add-item="addNewItem"/>
+
     </div>
 </div>
 
@@ -103,143 +67,75 @@
 
 
 
+
 <script >
 
 import { axios } from "@/common/api.service.js";
 import {API_URL} from "@/common/endpoints.js";
-import NewItem from "@/components/NewItem.vue";
-
 
 export default {
-  name: "OrderEditView",
-  components: {
-    NewItem,
-  },
-  props: {
-    id: {
-      type: String,
-      required: true,
-    },
-  },
+  name: "NewItem",
+
+  emits: ["add-item"],
   data() {
     return {
-      order: {},
-      params: {},
-      updatedOrder: {},
+
+      selectedProduct: null,
+      qty: 1,
+      products: [],
       errorMessage: "",
-      alreadypresentErrorMsg: "",
       updated: false,
       loadingOrder: false,
     };
   },
   methods: {
+    
 
-    deleteItem(id){
-        console.log("Deleting item...");
-        console.log(id);
-        this.order.items = this.order.items.filter(item => item.product_id !== id);
-        console.log(this.order.items);
-    },
-
-    addNewItem(new_item){
-        this.alreadypresentErrorMsg = "";
-        let already_exists = this.order.items.find(item => item.product_id === new_item.product.id);
-        if(already_exists){
-            this.alreadypresentErrorMsg = "Il prodotto è già presente nell'ordine.";
+    addItem(id){
+        this.errorMessage=""
+        if(!this.selectedProduct){
+            this.errorMessage = "Seleziona un prodotto valido.";
             return;
         }
-        console.log("Adding new item to order...");
-        console.log(new_item);
-        this.order.items.push({
-            product_id: new_item.product.id,
-            product_name: new_item.product.name,
-            product_price: new_item.product.price,
-            quantity: new_item.quantity
-        });
-        console.log(this.order.items);
-    },
-
-    async getOrder() {
-
-      this.loadingOrder = true;
-      try {
-
-        const response = await axios.get(API_URL + "orders/" + this.id,  );
-        console.log(response.data);
-        this.order = response.data
-        this.loadingOrder = false;
-
-      } catch (error) {
-        console.log(error.response);
-      }
-    },
-
-    async deleteOrder() {
-      try {
-        await await axios.delete(API_URL + "orders/" + this.id + "/");
-        this.$router.push({
-          name: "home",
-        });
-      } catch (error) {
-        console.log(error.response);
-        this.errorMessage = "ERROR: " + error.response.statusText;
-        console.log(error.response);
-
-      }
-    },
-    async UpdateOrder() {
-      console.log("Updating order...");
-      this.loadingOrder = true;
-      this.updated = false;
-      this.errorMessage = "";
-
-      let updated_items = []
-      updated_items = this.order.items.map(item => {
-        return {
-          product: item.product_id,
-          quantity: item.quantity
-        };
-      });
-      this.updated_order =  {
-        name: this.order.name,
-        description:  this.order.description,
-        date: this.order.date,
-        items_in: updated_items
+        if(this.qty <= 0){
+            this.errorMessage = "Inserisci una quantità valida.";
+            return;
         }
-      console.log("UPDATED ORDER:");
-      console.log(this.updated_order);
+
+        this.$emit("add-item", {
+            product: this.selectedProduct,
+            quantity: this.qty
+        });
+        this.selectedProduct = null;
+        this.qty = 1;
+
+    },
+
+    async getProducts() {
+
+      this.loadingOrder = true;
       try {
 
-
-        let response = await axios.patch(API_URL + "orders/" + this.id + "/",  this.updated_order );
+        const response = await axios.get(API_URL + "products/" );
+        console.log(response.data);
+        this.products = response.data
         this.loadingOrder = false;
 
-        console.log("Order updated successfully.");
-        console.log(response.data);
-        this.updated = true;
-        this.errorMessage = "";
-        // this.$router.go(0);
       } catch (error) {
-        this.errorMessage = "ERROR: " + error.response.statusText;
         console.log(error.response);
-
-
       }
     },
+
   },
   created() {
-    document.title = "Orders - ILIAD";
-    this.getOrder();
+    this.getProducts();
   },
 };
 </script>
 
 
 
-
 <style scoped>
-
-
         :root {
             font-family: Arial, sans-serif;
         }
@@ -434,6 +330,5 @@ export default {
         .text-center {
             text-align: center;
         }
-
 
 </style>
